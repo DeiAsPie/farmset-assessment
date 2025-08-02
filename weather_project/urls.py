@@ -17,11 +17,18 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.http import FileResponse
+import os
+
+def frontend_view(request):
+    frontend_path = os.path.join(settings.BASE_DIR, 'frontend', 'index.html')
+    return FileResponse(open(frontend_path, 'rb'))
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('weather_api.urls')),
-    path('', include('weather_api.urls')),  # For frontend routing
+    path('frontend/', frontend_view, name='frontend'),
+    path('', include('weather_api.urls')),
 ]
 
 if settings.DEBUG:

@@ -5,7 +5,6 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from .models import Region, WeatherParameter, WeatherData
 from .serializers import RegionSerializer, WeatherParameterSerializer, WeatherDataSerializer
 import requests
-from django.http import JsonResponse
 
 
 class RegionViewSet(viewsets.ReadOnlyModelViewSet):
@@ -77,13 +76,11 @@ class WeatherDataViewSet(viewsets.ReadOnlyModelViewSet):
 
 def home_view(request):
     """Simple home page with API information."""
-    return JsonResponse({
-        'message': 'Welcome to FarmSetu Weather API',
-        'endpoints': {
-            'regions': '/api/regions/',
-            'parameters': '/api/weather-parameters/',
-            'weather-data': '/api/weather-data/',
-            'admin': '/admin/',
-            'dashboard': '/frontend/'
-        }
-    })
+    from django.shortcuts import render
+    
+    context = {
+        'total_regions': Region.objects.count(),
+        'total_parameters': WeatherParameter.objects.count(),
+        'total_weather_data': WeatherData.objects.count(),
+    }
+    return render(request, 'weather_api/home.html', context)
