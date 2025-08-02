@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FarmSetu Weather Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .control-group label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #495057;
+        }
+
+        .control-group select,
+        .control-group input,
+        .control-group button {
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .control-group button {
+            background: #667eea;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .control-group button:hover {
+            background: #764ba2;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: white;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .chart-container {
+            padding: 30px;
+            background: white;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 400px;
+            margin: 20px 0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #6c757d;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .data-table th {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #495057;
+        }
+
+        .data-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌤️ FarmSetu Weather Dashboard</h1>
+            <p>UK MetOffice Weather Data Visualization</p>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="regionSelect">Region:</label>
+                <select id="regionSelect">
+                    <option value="">Loading...</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="parameterSelect">Parameter:</label>
+                <select id="parameterSelect">
+                    <option value="">Loading...</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="yearFrom">Year From:</label>
+                <input type="number" id="yearFrom" value="2020" min="1900" max="2024">
+            </div>
+            <div class="control-group">
+                <label for="yearTo">Year To:</label>
+                <input type="number" id="yearTo" value="2023" min="1900" max="2024">
+            </div>
+            <div class="control-group">
+                <label>&nbsp;</label>
+                <button onclick="loadWeatherData()">Load Data</button>
+            </div>
+            <div class="control-group">
+                <label>&nbsp;</label>
+                <button onclick="fetchNewData()">Fetch New Data</button>
+            </div>
+        </div>
+
+        <div class="stats" id="statsContainer">
+            <div class="stat-card">
+                <div class="stat-number" id="totalRecords">-</div>
+                <div class="stat-label">Total Records</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="avgValue">-</div>
+                <div class="stat-label">Average Value</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="minValue">-</div>
+                <div class="stat-label">Minimum Value</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="maxValue">-</div>
+                <div class="stat-label">Maximum Value</div>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Weather Data Trends</h2>
+            <div class="chart-wrapper">
+                <canvas id="weatherChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Recent Weather Data</h2>
+            <div id="dataTableContainer">
+                <div class="loading">Select region and parameter to load data...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api';
+        let weatherChart = null;
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            loadRegions();
+            loadParameters();
+        });
+
+        async function loadRegions() {
+            try {
+                const response = await fetch(`${API_BASE}/regions/`);
+                const data = await response.json();
+                const select = document.getElementById('regionSelect');
+                
+                select.innerHTML = '<option value="">All Regions</option>';
+                data.results.forEach(region => {
+                    select.innerHTML += `<option value="${region.code}">${region.name}</option>`;
+                });
+            } catch (error) {
+                console.error('Error loading regions:', error);
+            }
+        }
+
+        async function loadParameters() {
+            try {
+                const response = await fetch(`${API_BASE}/parameters/`);
+                const data = await response.json();
+                const select = document.getElementById('parameterSelect');
+                
+                select.innerHTML = '<option value="">All Parameters</option>';
+                data.results.forEach(param => {
+                    select.innerHTML += `<option value="${param.code}">${param.name} (${param.unit})</option>`;
+                });
+            } catch (error) {
+                console.error('Error loading parameters:', error);
+            }
+        }
+
+        async function loadWeatherData() {
+            const region = document.getElementById('regionSelect').value;
+            const parameter = document.getElementById('parameterSelect').value;
+            const yearFrom = document.getElementById('yearFrom').value;
+            const yearTo = document.getElementById('yearTo').value;
+
+            const params = new URLSearchParams();
+            if (region) params.append('region', region);
+            if (parameter) params.append('parameter', parameter);
+            if (yearFrom) params.append('year_from', yearFrom);
+            if (yearTo) params.append('year_to', yearTo);
+
+            try {
+                showLoading();
+                const response = await fetch(`${API_BASE}/weather/?${params}`);
+                const data = await response.json();
+                
+                displayStats(data.results);
+                displayChart(data.results);
+                displayTable(data.results);
+            } catch (error) {
+                console.error('Error loading weather data:', error);
+                showError('Failed to load weather data');
+            }
+        }
+
+        function displayStats(data) {
+            if (!data || data.length === 0) {
+                document.getElementById('totalRecords').textContent = '0';
+                document.getElementById('avgValue').textContent = '-';
+                document.getElementById('minValue').textContent = '-';
+                document.getElementById('maxValue').textContent = '-';
+                return;
+            }
+
+            const values = data.map(item => item.value);
+            const avg = values.reduce((a, b) => a + b, 0) / values.length;
+            const min = Math.min(...values);
+            const max = Math.max(...values);
+
+            document.getElementById('totalRecords').textContent = data.length;
+            document.getElementById('avgValue').textContent = avg.toFixed(1);
+            document.getElementById('minValue').textContent = min.toFixed(1);
+            document.getElementById('maxValue').textContent = max.toFixed(1);
+        }
+
+        function displayChart(data) {
+            const ctx = document.getElementById('weatherChart').getContext('2d');
+            
+            if (weatherChart) {
+                weatherChart.destroy();
+            }
+
+            if (!data || data.length === 0) {
+                return;
+            }
+
+            // Group data by year and month
+            const groupedData = {};
+            data.forEach(item => {
+                const key = item.month ? `${item.year}-${item.month.toString().padStart(2, '0')}` : item.year;
+                if (!groupedData[key]) {
+                    groupedData[key] = [];
+                }
+                groupedData[key].push(item.value);
+            });
+
+            // Calculate averages for each period
+            const labels = Object.keys(groupedData).sort();
+            const values = labels.map(key => {
+                const periodValues = groupedData[key];
+                return periodValues.reduce((a, b) => a + b, 0) / periodValues.length;
+            });
+
+            weatherChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Weather Data',
+                        data: values,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            grid: {
+                                color: 'rgba(0,0,0,0.1)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(0,0,0,0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function displayTable(data) {
+            const container = document.getElementById('dataTableContainer');
+            
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div class="loading">No data available</div>';
+                return;
+            }
+
+            const table = document.createElement('table');
+            table.className = 'data-table';
+            
+            // Create header
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Region</th>
+                        <th>Parameter</th>
+                        <th>Year</th>
+                        <th>Month</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${data.slice(0, 50).map(item => `
+                        <tr>
+                            <td>${item.region_name}</td>
+                            <td>${item.parameter_name} (${item.parameter_unit})</td>
+                            <td>${item.year}</td>
+                            <td>${item.month || 'Annual'}</td>
+                            <td>${item.value}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            `;
+
+            container.innerHTML = '';
+            container.appendChild(table);
+
+            if (data.length > 50) {
+                const notice = document.createElement('p');
+                notice.textContent = `Showing first 50 of ${data.length} records`;
+                notice.style.textAlign = 'center';
+                notice.style.color = '#6c757d';
+                notice.style.marginTop = '10px';
+                container.appendChild(notice);
+            }
+        }
+
+        async function fetchNewData() {
+            const region = document.getElementById('regionSelect').value || 'UK';
+            const parameter = document.getElementById('parameterSelect').value || 'Tmax';
+
+            try {
+                showLoading();
+                const response = await fetch(`${API_BASE}/fetch-weather-data/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        region: region,
+                        parameter: parameter
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(`Successfully fetched ${result.data.records_created} new records!`);
+                    loadWeatherData(); // Reload the data
+                } else {
+                    showError(result.error || 'Failed to fetch data');
+                }
+            } catch (error) {
+                console.error('Error fetching new data:', error);
+                showError('Failed to fetch new data');
+            }
+        }
+
+        function showLoading() {
+            document.getElementById('dataTableContainer').innerHTML = '<div class="loading">Loading...</div>';
+        }
+
+        function showError(message) {
+            document.getElementById('dataTableContainer').innerHTML = `<div class="error">${message}</div>`;
+        }
+    </script>
+</body>
+</html>
