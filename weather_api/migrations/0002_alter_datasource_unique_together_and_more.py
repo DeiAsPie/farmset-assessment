@@ -4,57 +4,56 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('weather_api', '0001_initial'),
+        ("weather_api", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterUniqueTogether(
-            name='datasource',
+            name="datasource",
             unique_together=None,
         ),
         migrations.RemoveField(
-            model_name='datasource',
-            name='parameter',
+            model_name="datasource",
+            name="parameter",
         ),
         migrations.RemoveField(
-            model_name='datasource',
-            name='region',
+            model_name="datasource",
+            name="region",
         ),
         migrations.AlterModelOptions(
-            name='weatherdata',
-            options={'ordering': ['-year', '-month']},
+            name="weatherdata",
+            options={"ordering": ["-year", "-month"]},
         ),
         migrations.RemoveIndex(
-            model_name='weatherdata',
-            name='weather_api_region__a18e2d_idx',
+            model_name="weatherdata",
+            name="weather_api_region__a18e2d_idx",
         ),
         migrations.RemoveIndex(
-            model_name='weatherdata',
-            name='weather_api_year_63b027_idx',
+            model_name="weatherdata",
+            name="weather_api_year_63b027_idx",
         ),
         migrations.RemoveIndex(
-            model_name='weatherdata',
-            name='weather_api_created_ac1c3b_idx',
+            model_name="weatherdata",
+            name="weather_api_created_ac1c3b_idx",
         ),
         migrations.RemoveField(
-            model_name='region',
-            name='description',
+            model_name="region",
+            name="description",
         ),
         migrations.RemoveField(
-            model_name='weatherdata',
-            name='data_file',
+            model_name="weatherdata",
+            name="data_file",
         ),
         migrations.RemoveField(
-            model_name='weatherdata',
-            name='updated_at',
+            model_name="weatherdata",
+            name="updated_at",
         ),
         migrations.RemoveField(
-            model_name='weatherparameter',
-            name='description',
+            model_name="weatherparameter",
+            name="description",
         ),
         migrations.DeleteModel(
-            name='DataSource',
+            name="DataSource",
         ),
     ]

@@ -5,33 +5,35 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('weather_api', '0002_alter_datasource_unique_together_and_more'),
+        ("weather_api", "0002_alter_datasource_unique_together_and_more"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='region',
+            name="region",
             options={},
         ),
         migrations.AlterModelOptions(
-            name='weatherparameter',
+            name="weatherparameter",
             options={},
         ),
         migrations.AlterField(
-            model_name='weatherdata',
-            name='parameter',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='weather_api.weatherparameter'),
+            model_name="weatherdata",
+            name="parameter",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                to="weather_api.weatherparameter",
+            ),
         ),
         migrations.AlterField(
-            model_name='weatherdata',
-            name='region',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='weather_api.region'),
+            model_name="weatherdata",
+            name="region",
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="weather_api.region"),
         ),
         migrations.AlterField(
-            model_name='weatherparameter',
-            name='unit',
-            field=models.CharField(default='°C', max_length=20),
+            model_name="weatherparameter",
+            name="unit",
+            field=models.CharField(default="°C", max_length=20),
         ),
     ]
