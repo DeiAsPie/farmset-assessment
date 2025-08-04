@@ -1,7 +1,6 @@
 from django.core.management.base import BaseCommand
 from weather_api.models import Region, WeatherParameter
 import requests
-from datetime import datetime
 
 
 class Command(BaseCommand):
@@ -29,19 +28,18 @@ class Command(BaseCommand):
         
         # Create initial regions
         regions_data = [
-            {'code': 'UK', 'name': 'United Kingdom', 'description': 'United Kingdom'},
-            {'code': 'England', 'name': 'England', 'description': 'England'},
-            {'code': 'Wales', 'name': 'Wales', 'description': 'Wales'},
-            {'code': 'Scotland', 'name': 'Scotland', 'description': 'Scotland'},
-            {'code': 'Northern_Ireland', 'name': 'Northern Ireland', 'description': 'Northern Ireland'},
+            {'code': 'UK', 'name': 'United Kingdom'},
+            {'code': 'England', 'name': 'England'},
+            {'code': 'Wales', 'name': 'Wales'},
+            {'code': 'Scotland', 'name': 'Scotland'},
+            {'code': 'Northern_Ireland', 'name': 'Northern Ireland'},
         ]
         
         for region_data in regions_data:
             region, created = Region.objects.get_or_create(
                 code=region_data['code'],
                 defaults={
-                    'name': region_data['name'],
-                    'description': region_data['description']
+                    'name': region_data['name']
                 }
             )
             if created:
@@ -49,16 +47,11 @@ class Command(BaseCommand):
         
         # Create initial weather parameters
         parameters_data = [
-            {'code': 'Tmax', 'name': 'Maximum Temperature', 'unit': '°C', 
-             'description': 'Mean daily maximum temperature'},
-            {'code': 'Tmin', 'name': 'Minimum Temperature', 'unit': '°C', 
-             'description': 'Mean daily minimum temperature'},
-            {'code': 'Tmean', 'name': 'Mean Temperature', 'unit': '°C', 
-             'description': 'Mean temperature'},
-            {'code': 'Sunshine', 'name': 'Sunshine Duration', 'unit': 'hours', 
-             'description': 'Total sunshine duration'},
-            {'code': 'Rainfall', 'name': 'Rainfall', 'unit': 'mm', 
-             'description': 'Total rainfall'},
+            {'code': 'Tmax', 'name': 'Maximum Temperature', 'unit': '°C'},
+            {'code': 'Tmin', 'name': 'Minimum Temperature', 'unit': '°C'},
+            {'code': 'Tmean', 'name': 'Mean Temperature', 'unit': '°C'},
+            {'code': 'Sunshine', 'name': 'Sunshine Duration', 'unit': 'hours'},
+            {'code': 'Rainfall', 'name': 'Rainfall', 'unit': 'mm'},
         ]
         
         for param_data in parameters_data:
@@ -66,8 +59,7 @@ class Command(BaseCommand):
                 code=param_data['code'],
                 defaults={
                     'name': param_data['name'],
-                    'unit': param_data['unit'],
-                    'description': param_data['description']
+                    'unit': param_data['unit']
                 }
             )
             if created:
@@ -86,7 +78,7 @@ class Command(BaseCommand):
 
     def fetch_weather_data(self, region_code, parameter_code):
         """Fetch weather data from UK MetOffice."""
-        from weather_api.models import WeatherData, DataSource
+        from weather_api.models import WeatherData
         
         url = f"https://www.metoffice.gov.uk/pub/data/weather/uk/climate/datasets/{parameter_code}/date/{region_code}.txt"
         
@@ -124,8 +116,7 @@ class Command(BaseCommand):
                                         month=month,
                                         defaults={
                                             'value': value,
-                                            'source_url': url,
-                                            'data_file': f'{region_code}_{parameter_code}.txt'
+                                            'source_url': url
                                         }
                                     )
                                     
@@ -134,18 +125,6 @@ class Command(BaseCommand):
                                         
                                 except ValueError:
                                     continue
-        
-        # Update data source
-        DataSource.objects.update_or_create(
-            region=region,
-            parameter=parameter,
-            defaults={
-                'name': f'{region_code} {parameter_code}',
-                'url': url,
-                'last_updated': datetime.now(),
-                'is_active': True
-            }
-        )
         
         self.stdout.write(
             self.style.SUCCESS(f'Successfully created {created_count} weather records')
