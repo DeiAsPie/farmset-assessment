@@ -2,13 +2,17 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
 
-# Create a router and register our viewsets
+# Create router for API endpoints
 router = DefaultRouter()
+router.register(r'weather', views.WeatherDataViewSet, basename='weather')
 router.register(r'regions', views.RegionViewSet)
-router.register(r'weather-parameters', views.WeatherParameterViewSet)
-router.register(r'weather-data', views.WeatherDataViewSet)
+router.register(r'parameters', views.WeatherParameterViewSet)
 
 urlpatterns = [
+    # Frontend
+    path('', views.home, name='home'),
+    
+    # API
+    path('api/', views.api_overview, name='api_overview'),
     path('api/', include(router.urls)),
-    path('', views.home_view, name='home'),
 ]
