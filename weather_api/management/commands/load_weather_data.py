@@ -20,7 +20,9 @@ class Command(BaseCommand):
         ]
 
         for code, name in regions:
-            region, created = Region.objects.get_or_create(code=code, defaults={"name": name})
+            region, created = Region.objects.get_or_create(
+                code=code, defaults={"name": name}
+            )
             if created:
                 self.stdout.write(f"✓ Created region: {name}")
 
@@ -34,7 +36,9 @@ class Command(BaseCommand):
         ]
 
         for code, name, unit in parameters:
-            param, created = WeatherParameter.objects.get_or_create(code=code, defaults={"name": name, "unit": unit})
+            param, created = WeatherParameter.objects.get_or_create(
+                code=code, defaults={"name": name, "unit": unit}
+            )
             if created:
                 self.stdout.write(f"✓ Created parameter: {name}")
 
@@ -45,7 +49,9 @@ class Command(BaseCommand):
         if len(options.get("args", [])) > 0 and options["args"][0] == "--fetch-real":
             self.fetch_real_weather_data()
 
-        self.stdout.write(self.style.SUCCESS("✅ Setup complete! Data structure ready."))
+        self.stdout.write(
+            self.style.SUCCESS("✅ Setup complete! Data structure ready.")
+        )
 
     def create_sample_data(self):
         """Create sample weather data for demonstration."""
@@ -94,7 +100,11 @@ class Command(BaseCommand):
 
             # Parse the data (simple parsing for demonstration)
             lines = response.text.strip().split("\n")
-            data_lines = [line for line in lines if line and not line.startswith("#") and not line.startswith("Year")]
+            data_lines = [
+                line
+                for line in lines
+                if line and not line.startswith("#") and not line.startswith("Year")
+            ]
 
             if data_lines:
                 # Get models
@@ -115,15 +125,17 @@ class Command(BaseCommand):
                             try:
                                 annual_value = float(parts[13])
 
-                                weather_data, created = WeatherData.objects.get_or_create(
-                                    region=uk_region,
-                                    parameter=tmax_param,
-                                    year=year,
-                                    month=None,  # Annual data
-                                    defaults={
-                                        "value": annual_value,
-                                        "source_url": url,
-                                    },
+                                weather_data, created = (
+                                    WeatherData.objects.get_or_create(
+                                        region=uk_region,
+                                        parameter=tmax_param,
+                                        year=year,
+                                        month=None,  # Annual data
+                                        defaults={
+                                            "value": annual_value,
+                                            "source_url": url,
+                                        },
+                                    )
                                 )
 
                                 if created:
@@ -132,7 +144,9 @@ class Command(BaseCommand):
                             except ValueError:
                                 continue
 
-                self.stdout.write(f"✅ Fetched and stored {count} real weather records from UK MetOffice")
+                self.stdout.write(
+                    f"✅ Fetched and stored {count} real weather records from UK MetOffice"
+                )
             else:
                 self.stdout.write("⚠️  No parseable data found in MetOffice response")
 

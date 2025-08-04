@@ -35,7 +35,9 @@ class WeatherData(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
-        period = f"{self.year}" if self.month is None else f"{self.year}-{self.month:02d}"
+        period = (
+            f"{self.year}" if self.month is None else f"{self.year}-{self.month:02d}"
+        )
         return f"{self.region.name} {self.parameter.name} {period}: {self.value}"
 
     class Meta:
