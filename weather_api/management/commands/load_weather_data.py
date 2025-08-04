@@ -91,40 +91,42 @@ class Command(BaseCommand):
         region = Region.objects.get(code=region_code)
         parameter = WeatherParameter.objects.get(code=parameter_code)
         
-        # Parse data
+        # Parse data - simplified to handle annual data
         lines = response.text.strip().split('\n')
         created_count = 0
         
         for line in lines:
             line = line.strip()
-            if line and not line.startswith('#') and not line.startswith('Year'):
+            if line and not line.startswith('#') and not line.startswith('Year') and line != '':
                 parts = line.split()
-                if len(parts) >= 13:  # Year + 12 months
-                    year = int(parts[0])
-                    
-                    # Process monthly data (limit to recent years for demo)
-                    if year >= 2020:
-                        for month, value_str in enumerate(parts[1:13], 1):
-                            if value_str != '---':
-                                try:
-                                    value = float(value_str)
-                                    
-                                    weather_data, created = WeatherData.objects.get_or_create(
-                                        region=region,
-                                        parameter=parameter,
-                                        year=year,
-                                        month=month,
-                                        defaults={
-                                            'value': value,
-                                            'source_url': url
-                                        }
-                                    )
-                                    
-                                    if created:
-                                        created_count += 1
-                                        
-                                except ValueError:
-                                    continue
+                if len(parts) >= 2:  # Year + at least one value
+                    try:
+                        year = int(parts[0])
+                        # Use annual average (last column) if available, otherwise first data column
+                        if len(parts) >= 14:  # Has annual column
+                            annual_value = parts[13]
+                        else:
+                            annual_value = parts[1]  # First month value as fallback
+                        
+                        if annual_value != '---':
+                            value = float(annual_value)
+                            
+                            weather_data, created = WeatherData.objects.get_or_create(
+                                region=region,
+                                parameter=parameter,
+                                year=year,
+                                month=None,  # Annual data
+                                defaults={
+                                    'value': value,
+                                    'source_url': url
+                                }
+                            )
+                            
+                            if created:
+                                created_count += 1
+                                
+                    except (ValueError, IndexError):
+                        continue
         
         self.stdout.write(
             self.style.SUCCESS(f'Successfully created {created_count} weather records')
